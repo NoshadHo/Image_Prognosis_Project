@@ -16,7 +16,6 @@ data_tile = data_tile %>% select(-ImageNumber,
                                    -AreaShape_EulerNumber,
                                    -Number_Object_Number)
 
-
 #save the colnames
 col_names = colnames(data_tile)
 
