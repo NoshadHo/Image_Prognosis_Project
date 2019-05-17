@@ -127,3 +127,101 @@ nuclei_sample = left_join(nuclei_sample,nuclei_sample_max, by = "ImageNumber")
 #Write the file
 setwd('/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/')
 write_tsv(nuclei_sample, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/FilteredNuclei_sample.tsv", col_names = TRUE)
+
+# load the files and merge them together
+nuclei = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/nuclei_sample.tsv", col_names = TRUE)
+cyto = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/cytoplasm_sample.tsv", col_names = TRUE)
+cell = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/cells_sample.tsv", col_names = TRUE)
+
+
+#add the organel name to the features:
+colnames(nuclei) = paste("Nuclei_",colnames(nuclei),sep = "")
+colnames(cyto) = paste("Cyto_",colnames(cyto),sep = "")
+colnames(cell) = paste("Cell_",colnames(cell),sep = "")
+
+#remove mean,median,... from the image number. It is our ID you idiot :|
+colnames(nuclei)[1] = "ImageNumber"
+colnames(cyto)[1] = "ImageNumber"
+colnames(cell)[1] = "ImageNumber"
+
+
+
+data_file = inner_join(nuclei,cyto, by = "ImageNumber")
+data_file = inner_join(data_file,cell, by = "ImageNumber")
+
+#write the final file:
+write_tsv(data_file, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/data_file.tsv", col_names = TRUE)
+
+
+
+#################
+#################
+#Download gdc manifest for lihc tcga project
+#Download the clinical follow-up file for lihc tscga project
+#make a file containing: TCGA id-UUID-dead/alive-days they lived
+manifest = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/gdc_manifest.2019-05-17 (1).txt")
+follow_up = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/nationwidechildrens.org_clinical_follow_up_v4.0_lihc.txt")
+
+manifest = manifest %>% mutate(filename = substr(filename,0,12))
+manifest = manifest %>% select(-md5,
+                               -size,
+                               -state)
+
+follow_up = follow_up %>% slice(-1,-2)
+colnames(follow_up)[2] = colnames(manifest)[2]
+follow_up = follow_up %>% select(filename, vital_status, death_days_to, last_contact_days_to)
+
+joined_files_temp = left_join(manifest, follow_up, by = "filename")
+joined_files_temp = na.omit(joined_files_temp)
+  #here we merge the days to death and last contact day
+joined_files_temp = joined_files_temp %>% 
+  mutate(alive_days = if_else(vital_status == "Dead", death_days_to, last_contact_days_to))
+joined_files_temp = joined_files_temp %>% select(-death_days_to, -last_contact_days_to)
+survival = joined_files_temp %>% mutate(vital_status = if_else(vital_status == "Alive", 0, 1))
+survival = survival %>% filter(vital_status != "[Not Available]")
+survival = survival %>% filter(alive_days != "[Not Available]")
+
+#Write the survival file
+write_tsv(survival, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/survival.tsv", col_names = TRUE)
+
+
+# change the sample id in data_file to the UUID and then to the TCGA id
+id_map = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/id_map.tsv", col_names = FALSE)
+id_map = id_map %>% select(-X3)
+colnames(id_map) = c("matlab_id", "id")
+
+survival_id = survival %>% left_join(id_map, by = "id")
+survival_id = na.omit(survival_id)
+data_file_temp = data_file
+for (i in 1:dim(survival_id)[1]){
+  print(i)
+  for (j in 1:dim(data_file)[1]){
+    if (data_file$ImageNumber[j] == survival_id$matlab_id[i]){
+      print("******************************")
+      data_file_temp$ImageNumber[j] = survival_id$filename[i]
+      break
+    }
+  }
+}
+data_file_temp = data_file_temp %>% filter(nchar(ImageNumber) > 10)
+
+final_data_file = data_file_temp
+#Write the final data file
+write_tsv(final_data_file, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/final_data_no_survival.tsv", col_names = TRUE)
+
+unique_survival_id = survival_id %>% group_by(filename) %>% slice(1)
+#get the corresponding survival file
+temp = unique_survival_id %>% filter(filename %in% final_data_file$ImageNumber)
+selected_survival = temp %>% select(filename,vital_status,alive_days)
+#Write the final data file
+write_tsv(selected_survival, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/selected_survival.tsv", col_names = TRUE)
+
+
+
+################
+################
+# preparing for stanford code
+selected_survival = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/selected_survival.tsv")
+selected_survival = selected_survival %>% arrange(filename)
+
+final_data_file = final_data_file %>% arrange(ImageNumber)
