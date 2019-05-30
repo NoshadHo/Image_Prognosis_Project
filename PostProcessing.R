@@ -127,6 +127,7 @@ nuclei_sample = left_join(nuclei_sample,nuclei_sample_max, by = "ImageNumber")
 #Write the file
 setwd('/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/')
 write_tsv(nuclei_sample, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/FilteredNuclei_sample.tsv", col_names = TRUE)
+<<<<<<< HEAD
 
 # load the files and merge them together
 nuclei = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/nuclei_sample.tsv", col_names = TRUE)
@@ -226,3 +227,5 @@ selected_survival = selected_survival %>% arrange(filename)
 
 final_data_file = final_data_file %>% arrange(ImageNumber)
 
+=======
+>>>>>>> 911f91a49e8c01aba551e379b0510779603b3738
