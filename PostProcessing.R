@@ -127,7 +127,7 @@ nuclei_sample = left_join(nuclei_sample,nuclei_sample_max, by = "ImageNumber")
 #Write the file
 setwd('/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/')
 write_tsv(nuclei_sample, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/FilteredNuclei_sample.tsv", col_names = TRUE)
-<<<<<<< HEAD
+
 
 # load the files and merge them together
 nuclei = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/nuclei_sample.tsv", col_names = TRUE)
@@ -149,6 +149,15 @@ colnames(cell)[1] = "ImageNumber"
 
 data_file = inner_join(nuclei,cyto, by = "ImageNumber")
 data_file = inner_join(data_file,cell, by = "ImageNumber")
+
+#write each file individually:
+write_tsv(nuclei, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/nuclei.tsv", col_names = TRUE)
+write_tsv(cyto, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/cyto.tsv", col_names = TRUE)
+write_tsv(cell, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/cell.tsv", col_names = TRUE)
+
+#from here, go to the line 195 (right after wrting the survival data, until writing the final data file), there, do
+  #deepProg_data_1.tsv = nuclei /cell / cyto and write the files for deepProg
+#Before running the sutrvival section, do this too: data_file = cell / cell / cyto
 
 #write the final file:
 write_tsv(data_file, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/data_file.tsv", col_names = TRUE)
@@ -208,7 +217,7 @@ data_file_temp = data_file_temp %>% filter(nchar(ImageNumber) > 10)
 
 final_data_file = data_file_temp
 #Write the final data file
-write_tsv(final_data_file, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/final_data_no_survival.tsv", col_names = TRUE)
+write_tsv(final_data_file, "/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanford_method/final_data_file.tsv", col_names = TRUE)
 
 unique_survival_id = survival_id %>% group_by(filename) %>% slice(1)
 #get the corresponding survival file
@@ -226,6 +235,3 @@ selected_survival = read_tsv("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanf
 selected_survival = selected_survival %>% arrange(filename)
 
 final_data_file = final_data_file %>% arrange(ImageNumber)
-
-=======
->>>>>>> 911f91a49e8c01aba551e379b0510779603b3738
