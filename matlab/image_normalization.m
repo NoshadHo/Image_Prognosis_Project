@@ -22,7 +22,7 @@
     fileNum = size(dirname,2);
     
 %load the refrence file
-    fileName = dirname(1);  %we use first file as the refrence file
+    fileName = dirname(2);  %we use first file as the refrence file
     %set the image path
     scratch = strcat('/scratch/lgarmire_fluxm/noshadh/Diagnostic_Slide_images/', fileName, '/');
     cd(string(scratch));
@@ -34,12 +34,9 @@
     image_red =     image(:,:,1);
     image_green =   image(:,:,2);
     image_blue =    image(:,:,3);
-    
-    %Look at the histogram of these channels:
-    h = histogram(image_red_2)
 %% Normalize one sample -> extend it to all samples
     %read the second image to normalize:
-    fileName = dirname(2);  %we use first file as the refrence file
+    fileName = dirname(17);  %we use first file as the refrence file
     %set the image path
     scratch = strcat('/scratch/lgarmire_fluxm/noshadh/Diagnostic_Slide_images/', fileName, '/');
     cd(string(scratch));
@@ -48,11 +45,40 @@
     tic             %to measure how long does it take to load the image
     image_2 = imread(filename);
     toc
+    image_2_gray = rgb2gray(image_2);
     image_red_2 =     image_2(:,:,1);
     image_green_2 =   image_2(:,:,2);
     image_blue_2 =    image_2(:,:,3);
-
-    %make them to have a same mean
+    
+    %app1:image adjust and hist equalization
+    image_red_2_temp = histeq(imadjust(image_red_2));
+    image_green_2_temp = histeq(imadjust(image_green_2));
+    image_blue_2_temp = histeq(imadjust(image_blue_2));
+    
+    image_2_temp(:,:,1) = image_red_2_temp;
+    image_2_temp(:,:,2) = image_green_2_temp;
+    image_2_temp(:,:,3) = image_blue_2_temp;
+    
+    %app2:use scale normalization by mean
+    %ref image means
+    image_red_mean = mean2(image_red);
+    image_green_mean = mean2(image_green);
+    image_blue_mean = mean2(image_blue);
+    
+    %case image means
+    image_red_2_mean = mean2(image_red_2);
+    image_green_2_mean = mean2(image_green_2);
+    image_blue_2_mean = mean2(image_blue_2);
+    
+    image_red_2_temp = image_red_2 * (image_red_mean/image_red_2_mean);
+    image_green_2_temp = image_green_2 * (image_green_mean/image_green_2_mean);
+    image_blue_2_temp = image_blue_2 * (image_blue_mean/image_blue_2_mean);
+    
+    image_2_temp(:,:,1) = image_red_2_temp;
+    image_2_temp(:,:,2) = image_green_2_temp;
+    image_2_temp(:,:,3) = image_blue_2_temp;
+    
+    %app3:make them to have a same mean
     image_red_2_temp = image_red_2 - mean(mean(image_red_2)) + mean(mean(image_red));
     image_green_2_temp = image_green_2 - mean(mean(image_green_2)) + mean(mean(image_green));
     image_blue_2_temp = image_blue_2 - mean(mean(image_blue_2)) + mean(mean(image_blue));
@@ -63,6 +89,6 @@
     %now make the image
     image_2_temp(:,:,1) = image_red_2_temp;
     image_2_temp(:,:,2) = image_green_2_temp;
-    image_2_temp(:,:,3) = image_blue_2_temp
+    image_2_temp(:,:,3) = image_blue_2_temp;
 %% Save the normalized images
 %% Plot distribution of colors for each channel, after and befor normalization
