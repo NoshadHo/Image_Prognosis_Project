@@ -18,8 +18,9 @@ clinical = readxl::read_xlsx("/scratch/lgarmire_fluxm/noshadh/Top_dense_10_Stanf
 
 #first remove NA and Not-applicable columns
 clinical = clinical %>% select(-!!1) #remove first column
-#INCOMPLETE*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/*/
-
+#turn all the [Not Available] to NA
+clinical2 = clinical %>% mutate_all(str_replace(.,'[Not Available]','NA'))
+clinical = clinical %>% select()
 
 #do the one hot encoding
 clinical_OHE = clinical %>% mutate_if(is.character,as.factor) %>% 
