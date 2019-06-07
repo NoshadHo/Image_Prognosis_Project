@@ -50,16 +50,7 @@
     image_green_2 =   image_2(:,:,2);
     image_blue_2 =    image_2(:,:,3);
     
-    %app1:image adjust and hist equalization
-    image_red_2_temp = histeq(imadjust(image_red_2));
-    image_green_2_temp = histeq(imadjust(image_green_2));
-    image_blue_2_temp = histeq(imadjust(image_blue_2));
-    
-    image_2_temp(:,:,1) = image_red_2_temp;
-    image_2_temp(:,:,2) = image_green_2_temp;
-    image_2_temp(:,:,3) = image_blue_2_temp;
-    
-    %app2:use scale normalization by mean
+    %use scale normalization by mean
     %ref image means
     image_red_mean = mean2(image_red);
     image_green_mean = mean2(image_green);
@@ -74,19 +65,6 @@
     image_green_2_temp = image_green_2 * (image_green_mean/image_green_2_mean);
     image_blue_2_temp = image_blue_2 * (image_blue_mean/image_blue_2_mean);
     
-    image_2_temp(:,:,1) = image_red_2_temp;
-    image_2_temp(:,:,2) = image_green_2_temp;
-    image_2_temp(:,:,3) = image_blue_2_temp;
-    
-    %app3:make them to have a same mean
-    image_red_2_temp = image_red_2 - mean(mean(image_red_2)) + mean(mean(image_red));
-    image_green_2_temp = image_green_2 - mean(mean(image_green_2)) + mean(mean(image_green));
-    image_blue_2_temp = image_blue_2 - mean(mean(image_blue_2)) + mean(mean(image_blue));
-    %any value less than 0 should be zero
-    image_red_2_temp(image_red_2_temp < 0) = 0;
-    image_green_2_temp(image_green_2_temp < 0) = 0;
-    image_blue_2_temp(image_blue_2_temp < 0) = 0;
-    %now make the image
     image_2_temp(:,:,1) = image_red_2_temp;
     image_2_temp(:,:,2) = image_green_2_temp;
     image_2_temp(:,:,3) = image_blue_2_temp;
