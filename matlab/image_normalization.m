@@ -75,12 +75,19 @@ cd /scratch/lgarmire_fluxm/noshadh/Diagnostic_Slide_images/
 files = dir;
 dirname = {files([files.isdir]).name};
 dirname = dirname(~ismember(dirname,{'.','..'}));
-
-%33 didn't work
+%remember to remove 3 directory from the list:
+    %   missed_images   ->369
+    %   Dense_10_tiles  ->220
+    %   Dense20         ->219
+    dirname(369) = [];
+    dirname(220) = [];
+    dirname(219) = [];
+    fileNum = size(dirname,2);
+    
 fileNum = size(dirname,2);
 file = dirname(1);
 
-for k = 218:fileNum
+for k = 1:fileNum
     tic
     disp ___________________
     disp(k);
@@ -93,7 +100,7 @@ for k = 218:fileNum
     filename = svsFile(1).name;
 
     %make the Tiles folder
-    mkdir Tiles_Normalized
+    mkdir Tiles_Normalized_2
     %Load the Image
     image = imread(filename);
     
@@ -125,10 +132,10 @@ for k = 218:fileNum
     j = 1;
     while i < imageSize(1,1) - 1000 % i indicate row number
         while j < imageSize(1,2) - 1000 % j is for moving horizontaly on image, we scan row by row
-            fprintf("i is %d and j is %d\n",i,j);
+            %fprintf("i is %d and j is %d\n",i,j);
             RGBSum = 0;
 
-            wfile = strcat('Tiles_Normalized/', num2str(i), '_', num2str(j), '.tiff');
+            wfile = strcat('Tiles_Normalized_2/', num2str(i), '_', num2str(j), '.tiff');
             tile = image(i:i+1000 ,j:j+1000,:);
 
             %here we discard the background tile
