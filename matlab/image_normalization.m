@@ -31,15 +31,15 @@
     tic             %to measure how long does it take to load the image
     image_ref = imread(filename);
     toc
-    image_ref_red =     image(:,:,1);
-    image_ref_green =   image(:,:,2);
-    image_ref_blue =    image(:,:,3);
+    image_ref_red =     image_ref(:,:,1);
+    image_ref_green =   image_ref(:,:,2);
+    image_ref_blue =    image_ref(:,:,3);
     
     %ref image means
-    image_ref_red_mean = mean2(image_red);
-    image_ref_green_mean = mean2(image_green);
-    image_ref_blue_mean = mean2(image_blue);
-%% Normalize one sample
+    image_ref_red_mean = mean2(image_ref_red);
+    image_ref_green_mean = mean2(image_ref_green);
+    image_ref_blue_mean = mean2(image_ref_blue);
+    %% Normalize one sample
     %read the second image to normalize:
     fileName = dirname(145);  %we use first file as the refrence file
     %set the image path
@@ -68,8 +68,54 @@
     image_2_temp(:,:,1) = image_red_2_temp;
     image_2_temp(:,:,2) = image_green_2_temp;
     image_2_temp(:,:,3) = image_blue_2_temp;
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+    counter = 0;
+    for i = 219:size(dirname,2)
+        files = dir(sprintf("./%s/",string(dirname(i))));
+        files = {files([files.isdir]).name};
+        files = files(~ismember(files,{'.','..'}));
+        if sum(ismember(files,"Tiles_Normalized_2")) == 1
+           counter = counter + 1;
+        end
+        if counter == 1
+            break
+        end
+        
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Normalize all samples and then Tiling
 
+%get a list of files
+    cd /scratch/lgarmire_fluxm/noshadh/Diagnostic_Slide_images/
+    files = dir;
+    dirname = {files([files.isdir]).name};
+    dirname = dirname(~ismember(dirname,{'.','..'}));
+    %remember to remove 3 directory from the list:
+    %   missed_images   ->369
+    %   Dense_10_tiles  ->220
+    %   Dense20         ->219
+    dirname(369) = [];
+    dirname(220) = [];
+    dirname(219) = [];
+    fileNum = size(dirname,2);
+    
+%load the refrence file
+    fileName = dirname(2);  %we use first file as the refrence file
+    %set the image path
+    scratch = strcat('/scratch/lgarmire_fluxm/noshadh/Diagnostic_Slide_images/', fileName, '/');
+    cd(string(scratch));
+    svsFile = dir('*.svs');
+    filename = svsFile(1).name;
+    tic             %to measure how long does it take to load the image
+    image_ref = imread(filename);
+    toc
+    
+    %ref image means
+    image_ref_red_mean = mean2(image_ref(:,:,1));
+    image_ref_green_mean = mean2(image_ref(:,:,2));
+    image_ref_blue_mean = mean2(image_ref(:,:,3));
+    clear image_ref
 tic
 cd /scratch/lgarmire_fluxm/noshadh/Diagnostic_Slide_images/
 files = dir;
@@ -82,12 +128,13 @@ dirname = dirname(~ismember(dirname,{'.','..'}));
     dirname(369) = [];
     dirname(220) = [];
     dirname(219) = [];
+    dirname(219) = [];
     fileNum = size(dirname,2);
     
 fileNum = size(dirname,2);
 file = dirname(1);
 
-for k = 1:fileNum
+for k = 222:fileNum
     tic
     disp ___________________
     disp(k);
@@ -102,25 +149,14 @@ for k = 1:fileNum
     %make the Tiles folder
     mkdir Tiles_Normalized_2
     %Load the Image
+    disp("[2] reading the dest file")
     image = imread(filename);
     
     %NORMALIZATION PROCESS
-    image_red =     image(:,:,1);
-    image_green =   image(:,:,2);
-    image_blue =    image(:,:,3);
-    
-    image_red_mean = mean2(image_red);
-    image_green_mean = mean2(image_green);
-    image_blue_mean = mean2(image_blue);
-    
-    image_red_temp = image_red * (image_ref_red_mean/image_red_mean);
-    image_green_temp = image_green * (image_ref_green_mean/image_green_mean);
-    image_blue_temp = image_blue * (image_ref_blue_mean/image_blue_mean);
-    
-    image(:,:,1) = image_red_temp;
-    image(:,:,2) = image_green_temp;
-    image(:,:,3) = image_blue_temp;
-    
+    image(:,:,1) = image(:,:,1) * (image_ref_red_mean/mean2(image(:,:,1)));
+    image(:,:,2) = image(:,:,2) * (image_ref_green_mean/mean2(image(:,:,2)));
+    image(:,:,3) = image(:,:,3) * (image_ref_blue_mean/mean2(image(:,:,3)));
+
     %tile up the image
     %each tile is a 1000*1000 pixel image, we will move a 1000*1000 window over all
     %the image and save the tiles
@@ -134,6 +170,7 @@ for k = 1:fileNum
         while j < imageSize(1,2) - 1000 % j is for moving horizontaly on image, we scan row by row
             %fprintf("i is %d and j is %d\n",i,j);
             RGBSum = 0;
+            
 
             wfile = strcat('Tiles_Normalized_2/', num2str(i), '_', num2str(j), '.tiff');
             tile = image(i:i+1000 ,j:j+1000,:);
